@@ -555,7 +555,7 @@ sudo cat /etc/gitlab/initial_root_password
 
 > 🌿 进阶 · 配置文件
 
-![Admin General Settings](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-4.1-admin-settings.png)
+![Admin General Settings](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-4.1-admin-settings.png)
 *图：Admin → Settings → General 页（[本机验证] 实拍）。UI 设置最终都写到 `/etc/gitlab/gitlab.rb`；改完跑 `gitlab-ctl reconfigure` 生效*
 
 Omnibus GitLab 主配置文件：**`/etc/gitlab/gitlab.rb`**（Ruby 语法，[官方] /omnibus/settings/configuration/）
@@ -975,10 +975,10 @@ sudo gitlab-ctl status              # 看进程状态
 
 ### 5.0.1 登录 + 改密码 [本机验证]
 
-![GitLab 登录页](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.1-login.png)
+![GitLab 登录页](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.1-login.png)
 *图：GitLab 19.1.1 登录页（[本机验证] 实拍）。输入 Username + Password 点 Sign in*
 
-![首次登录后的引导页](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.1a-first-login.png)
+![首次登录后的引导页](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.1a-first-login.png)
 *图：GitLab 19 首次 root 登录后**强制引导**创建 group/project（不能跳过）*
 
 1. 浏览器打开 <http://localhost/>
@@ -986,7 +986,7 @@ sudo gitlab-ctl status              # 看进程状态
 3. ⚠️ **立即改密码**：右上角头像 → **Edit profile** → 左侧菜单 **Access** → **Password and authentication** → 点 `Change password`
    （GitLab 19.1.1 把"改密码"从 Account 页拆到单独的 Access 子菜单下，跟 SSH Keys / GPG Keys 同级；早期版本在 Account 页）
 
-![改密码页](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.1b-change-password.png)
+![改密码页](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.1b-change-password.png)
 *图：User Settings → Access → Password and authentication（[本机验证] 实拍）。`Change password` 区可改密码；下面的 `Two-factor Authentication` 也建议一并启用*
 4. **失败模式**：`initial_root_password` 文件**24 小时后自动删**——改完新密码永不过期，不改会被锁外
 
@@ -996,13 +996,13 @@ sudo gitlab-ctl status              # 看进程状态
 
 > **GitLab 19 改动**：新建项目从一步表单变成了**两步流程**——先选方式（空白/模板/导入），再填表单。
 
-![创建项目入口（选方式）](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.2a-new-project.png)
+![创建项目入口（选方式）](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.2a-new-project.png)
 *图：Create new project 入口页（[本机验证] 实拍）。GitLab 19 把创建拆成 3 个卡片选项：**创建空白项目** / 从模板创建 / 导入项目；点 **创建空白项目** 进入下一步表单*
 
-![创建空白项目表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.2a-new-project-form.png)
+![创建空白项目表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.2a-new-project-form.png)
 *图：Create blank project 表单页（[本机验证] 实拍）。填 **项目名称** → 选 **可见性级别** (默认私有) → 勾 **使用自述文件初始化仓库** → 点 **新建项目***
 
-![项目主页（初始）](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.2b-project-home.png)
+![项目主页（初始）](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.2b-project-home.png)
 *图：刚创建的项目主页（[本机验证] 实拍）。左下"Set up CI/CD"是空 pipeline；默认 main 分支有 README；右上 Clone 提供 HTTPS/SSH URL*
 
 ```bash
@@ -1035,13 +1035,13 @@ git push -u origin feature/greeting
 
 Web：刷新项目页 → **Create merge request** → 标题"Add greeting doc" → 目标分支 `main` → **Create merge request** → **Merge**（含 squash / merge commit / rebase 三选一）。
 
-![新建 MR 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.3b-create-mr-form.png)
+![新建 MR 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.3b-create-mr-form.png)
 *图：New merge request 页（[本机验证] 实拍）。Source branch = feature/greeting，Target branch = main。下方可填 Assignee / Reviewer / Milestone / Labels*
 
-![MR 列表（合并后）](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.3c-mr-list-after.png)
+![MR 列表（合并后）](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.3c-mr-list-after.png)
 *图：Merge requests 列表页（[本机验证] 实拍）。Merged 显示合并状态；Open 是待合 MR*
 
-![仓库 tree 视图](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.3d-repo-tree.png)
+![仓库 tree 视图](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.3d-repo-tree.png)
 *图：项目仓库 tree 视图（[本机验证] 实拍）。main 分支文件列表；点击文件看历史/ blame*
 
 > 第一次推完，命令行会显示 "Create a pull request for X" 的 URL，**点它也直接进 MR 页面**。
@@ -1050,10 +1050,10 @@ Web：刷新项目页 → **Create merge request** → 标题"Add greeting doc" 
 
 Web：项目页 → 左侧 **Issues**（GitLab 19 重命名为 **Work items**）→ **New issue** → 标题"Add CI/CD" → 描述支持 Markdown → **Create issue**。
 
-![Work Items 列表](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.4a-issues-list.png)
+![Work Items 列表](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.4a-issues-list.png)
 *图：项目 Work Items 列表页（[本机验证] 实拍）。GitLab 19 把 Issues + Tasks + Epics 合并成 Work Items；左边 status filter，右边排序*
 
-![新建 Work Item 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.4b-new-work-item.png)
+![新建 Work Item 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.4b-new-work-item.png)
 *图：New issue 表单（[本机验证] 实拍）。填标题 + 描述（支持 Markdown / attachments）；下方可指派 Assignee / Labels / Due date / Milestone*
 
 > ⚠️ 没配 SMTP（04 章）之前，issue 评论 / @ 通知不发邮件，但**站内是能看**的。
@@ -1068,12 +1068,12 @@ API + git via HTTPS 都要 PAT，不能再用密码（GitLab 17 删了密码 git
 
 - 右上头像 → **Edit profile** → 左侧菜单 **Access tokens**
 
-![Access Tokens 列表](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.5a-access-tokens.png)
+![Access Tokens 列表](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.5a-access-tokens.png)
 *图：Personal access tokens 页（[本机验证] 实拍）。右上 **Add new token** 创建；列表显示已存在的 token（value 只在创建瞬间显示一次）*
 
 **👉 在图 5.0.5a 右上点 **Add new token** 按钮** → 跳转到表单页（图 5.0.5b）：
 
-![新增 PAT 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.5b-new-pat-form.png)
+![新增 PAT 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.5b-new-pat-form.png)
 *图：Add new personal access token 表单页（[本机验证] 实拍）。填 Token name + Expiration date + Scopes（最少给 `api`/`read_repository`/`write_repository`）→ 点 **Create personal access token***
 
 填表字段：
@@ -1188,10 +1188,10 @@ print(f"✅ Projects: {len(projects)}")
 
 可视化检查：在 Web UI 也能看到 GitLab 整体状态：
 
-![root 用户主页](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.6-user-home.png)
+![root 用户主页](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.6-user-home.png)
 *图：root 用户主页（[本机验证] 实拍）。顶部导航 Admin / Assigned / To-do 计数；下方 Activity / Projects / Starred projects tab*
 
-![Admin Dashboard](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.0.6-admin-dashboard.png)
+![Admin Dashboard](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.0.6-admin-dashboard.png)
 *图：Admin area → Dashboard（[本机验证] 实拍）。实例整体统计：用户数 / 项目数 / 组件健康度；最下方 Version 标签可看 GitLab 完整版本号*
 
 ---
@@ -1279,10 +1279,10 @@ git push -u origin --tags
 
 > ⚠️ Visibility Level 一旦创建**通常不可改回更严格级别**（Public → Private 需要在项目设置中额外操作；[官方] /user/public_access/)。
 
-![Public 项目 skills-repo](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.1.5b-skills-repo-empty.png)
+![Public 项目 skills-repo](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.1.5b-skills-repo-empty.png)
 *图：`root/skills-repo`（Public）刚创建后的空仓库主页（[本机验证]）。任何匿名访问者都能看到 main 分支和 README*
 
-![Private 项目 dev-code-sample](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.1.5c-dev-sample-empty.png)
+![Private 项目 dev-code-sample](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.1.5c-dev-sample-empty.png)
 *图：`root/dev-code-sample`（Private）刚创建后的空仓库主页（[本机验证]）。未登录访问会被重定向到登录页*
 
 #### 对比维度 2：创建入口（首页 vs 侧栏）
@@ -1320,7 +1320,7 @@ git push -u origin --tags
 
 #### 验证：用户创建表单截图
 
-![创建用户 alice 表单已填状态](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.1.6a-create-user-alice.png)
+![创建用户 alice 表单已填状态](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.1.6a-create-user-alice.png)
 *图：Admin → New User 页面，alice 的 Name / Username / Email 均已填写（[本机验证]）*
 
 #### 创建组（3 步完成）
@@ -1407,7 +1407,7 @@ git push -u origin feature/login-page
 
 > 🌿 进阶 · 了解即可
 
-![Repository Settings - Protected branches](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.2-protected-branches.png)
+![Repository Settings - Protected branches](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.2-protected-branches.png)
 *图：项目 Settings → Repository 页（[本机验证] 实拍）。展开 **Protected branches** 区块配置*
 
 `Settings` → **Repository** → **Protected branches**：
@@ -1597,7 +1597,7 @@ EOF
 
 > 🌿 进阶 · 看板视图
 
-![Issue Boards](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.4-boards.png)
+![Issue Boards](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.4-boards.png)
 *图：项目 Boards 页（[本机验证] 实拍）。默认 3 列 Open / In Progress / Closed；卡片可拖到不同列；右上 + 新增列*
 
 `项目菜单` → **Issues** → **Boards**：
@@ -1663,7 +1663,7 @@ GitLab 12 个规划工具中，**本教程重点讲 5 个**（各项下指向具
 
 > 🌿 进阶 · 文档协作
 
-![Wiki 首页](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.5-wiki.png)
+![Wiki 首页](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.5-wiki.png)
 *图：项目 Wiki 页（[本机验证] 实拍）。首页 `home` 可点编辑；右侧 Pages 列表；底部 Create your first page 入口*
 
 `项目菜单` → **Wiki** → **Create your first page**：
@@ -1676,7 +1676,7 @@ GitLab 12 个规划工具中，**本教程重点讲 5 个**（各项下指向具
 
 > 🌿 进阶 · 个人/团队代码片段
 
-![New Snippet](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.7-snippet-new.png)
+![New Snippet](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.7-snippet-new.png)
 *图：New snippet 页（[本机验证] 实拍）。填 Title + 文件（多文件）+ Visibility + 选语言；下方 snippets editor 自动高亮*
 
 `+` → **New snippet**：
@@ -1688,7 +1688,7 @@ GitLab 12 个规划工具中，**本教程重点讲 5 个**（各项下指向具
 
 > 🌿 进阶 · 发版本管理
 
-![New Release 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.8-release-new.png)
+![New Release 表单](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.8-release-new.png)
 *图：New release 页（[本机验证] 实拍）。基于 Git tag 创建；填 Title / Release notes（Markdown）；可上传 binary assets*
 
 `项目菜单` → **Deployments** → **Releases** → **New release**：
@@ -1744,7 +1744,7 @@ git push origin main
 
 > 🌿 进阶 · 镜像 / 包管理
 
-![Package Registry](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.10-packages.png)
+![Package Registry](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.10-packages.png)
 *图：项目 Package registry 页（[本机验证] 实拍）。GitLab 19 把 Container Registry / Maven / NPM / PyPI / Conan / NuGet / Generic 等统一显示在 Packages 页*
 
 每个项目自带一个 registry。
@@ -1775,7 +1775,7 @@ docker push registry.localhost:5000/mygroup/myproject/myimage:latest
 
 > 🌿 进阶 · 终端党
 
-![glab 项目页](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-5.11-glab-install.png)
+![glab 项目页](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-5.11-glab-install.png)
 *图：GitLab.com 的 glab 项目页（[本机验证] 实拍）。glab 是 GitLab 官方 CLI；安装文档 + release 包都在这个项目*
 
 [GitLab CLI](https://gitlab.com/gitlab-org/cli)：
@@ -1872,7 +1872,7 @@ deploy-prod:
 
 ### 6.2.4 看 Pipeline 状态
 
-![Pipelines 列表](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-6.1-pipelines-list.png)
+![Pipelines 列表](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-6.1-pipelines-list.png)
 *图：项目 Pipelines 页（[本机验证] 实拍）。列表显示每次 commit 触发的 pipeline 状态（pending/running/passed/failed）；点击看 stages / jobs 详情*
 
 `项目菜单` → **Build** → **Pipelines**：
@@ -1883,7 +1883,7 @@ deploy-prod:
 
 ### 6.2.5 Pipeline Editor
 
-![Pipeline Editor](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-6.2-ci-editor.png)
+![Pipeline Editor](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-6.2-ci-editor.png)
 *图：项目 CI/CD Editor（[本机验证] 实拍）。左侧 YAML 编辑器，右侧实时模拟 pipeline 结构（stages / jobs 树）；下方 Lint 按钮校验语法*
 
 `项目菜单` → **Build** → **Pipeline editor**：
@@ -2012,7 +2012,7 @@ deploy:
 
 ## 6.5 GitLab Runner（[官方] /runner/install/）
 
-![Admin Runners](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-6.3-runners.png)
+![Admin Runners](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-6.3-runners.png)
 *图：Admin → Runners 页（[本机验证] 实拍）。注册到实例的 Runner 列表；每条显示状态 / 标签 / executor 类型 / 上次联系时间*
 
 ### 6.5.1 Runner 是什么 & 架构位置
@@ -2323,7 +2323,7 @@ build-image:
 
 > 🌳 高级 · 安全 DevOps
 
-![DevOps Adoption 不可用](https://cdn.jsdelivr.net/gh/langren34/doc@main/images/gitlab-7.3-devops-adoption.png)
+![DevOps Adoption 不可用](https://cdn.jsdelivr.net/gh/langren34/doc@main/gitlab-tutorial/images/gitlab-7.3-devops-adoption.png)
 *图：[本机验证] CE 版访问 `/admin/devops_adoption` 返回 404 —— DevOps Adoption 报告是 **GitLab Ultimate / Enterprise** 专属功能（[官方] /admin/devops_adoption/），CE / Premium 没有。这是真实现状截图，提示升级。*
 
 GitLab 把安全工具链整合成一条流水线，跟 CI 一起跑：
