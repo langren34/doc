@@ -140,7 +140,7 @@ pnpm -F @html-anything/next dev
 
 `http://localhost.3000` 打开后，**第一件事**是让你选一个本地 coding agent：
 
-![Agent Picker 弹窗](html-anything/images/01-home-agent-picker.png)
+![Agent Picker 弹窗](images/01-home-agent-picker.png)
 
 *图：HTML Anything 启动后弹出的 Agent Picker 弹窗（本机实拍，2026-07-08 21:08）*
 
@@ -161,7 +161,7 @@ pnpm -F @html-anything/next dev
 
 ### 4.2 主编辑器界面
 
-![主编辑器界面](html-anything/images/02-main-editor.png)
+![主编辑器界面](images/02-main-editor.png)
 
 *图：HTML Anything 主编辑器（OpenClaw agent 已选，Magazine Article 模板已选）*
 
@@ -184,7 +184,7 @@ pnpm -F @html-anything/next dev
 
 点顶栏的模板选择器（中间红框里写着 "Magazine Article A4 / 长页面"），弹出模板选择面板：
 
-![模板选择器](html-anything/images/03-template-picker.png)
+![模板选择器](images/03-template-picker.png)
 
 *图：75+ 套模板按 mode + scenario 分类*
 
@@ -234,7 +234,7 @@ pnpm -F @html-anything/next dev
 
 在 Text 输入区粘 markdown，按 `⌘+Enter`（或点右侧的 `Convert to HTML ⌘+↵` 按钮）：
 
-![编辑器填入 markdown](html-anything/images/04-editor-filled.png)
+![编辑器填入 markdown](images/04-editor-filled.png)
 
 *图：编辑器填入测试 markdown 后状态*
 
@@ -242,7 +242,7 @@ pnpm -F @html-anything/next dev
 
 按 Convert 后，右侧 Preview 切到 **Log** tab，能看到 SSE 流：
 
-![Convert 流式日志](html-anything/images/05-convert-streaming.png)
+![Convert 流式日志](images/05-convert-streaming.png)
 
 *图：Convert 进行中——agent spawn、模型选择、token 用量实时日志（来自历史截图）*
 
@@ -303,7 +303,7 @@ META   usage_partial: {input_tokens:5, cache_creation_input_tokens:12009, cache_
 
 Convert 完成后（或编辑器右侧已经有了 HTML），点顶栏 `Export / Copy ▾`：
 
-![Export 菜单](html-anything/images/06-export-menu.png)
+![Export 菜单](images/06-export-menu.png)
 
 *图：Export / Copy 菜单（来自历史截图）*
 
@@ -339,7 +339,7 @@ Convert 完成后（或编辑器右侧已经有了 HTML），点顶栏 `Export /
 
 切换右上角 `Present F` 按钮，进入全屏演示模式：
 
-![Deck 演示模式](html-anything/images/07-deck-present.png)
+![Deck 演示模式](images/07-deck-present.png)
 
 *图：瑞士国际主义 Deck 演示模式——黑底大字 + 导航条 + 缩略图*
 
@@ -354,7 +354,7 @@ Convert 完成后（或编辑器右侧已经有了 HTML），点顶栏 `Export /
 
 ## 九、Hyperframes 视频帧模式
 
-![Hyperframes VFX 文字光标](html-anything/images/08-hyperframes-vfx.png)
+![Hyperframes VFX 文字光标](images/08-hyperframes-vfx.png)
 
 *图：vfx-text-cursor 模板，文字 hot pink × cyan 像散拖尾——丢一句金句进去就是电影级片头*
 
@@ -370,7 +370,7 @@ Hyperframes 是**帧脚本格式**：每帧 `1920×1080`，带 `duration` / `tra
 
 ## 十、编辑器 + 实时预览（核心 UX）
 
-![编辑器实时预览](html-anything/images/09-editor-with-preview.png)
+![编辑器实时预览](images/09-editor-with-preview.png)
 
 *图：编辑 markdown 的同时，右侧实时显示渲染结果（来自历史截图）*
 
