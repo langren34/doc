@@ -278,6 +278,17 @@ GitLab 由多个组件协作（[官方] /install/requirements/ + /architecture/a
 
 **用户视角**：平时只用 Web UI（80/443）+ git 推拉（80/443 或 22）两个入口，其他全是内网，不需要你管。
 
+### Gitaly 是什么？
+
+Gitaly 是 GitLab 自己封装的 Git RPC 服务（取代了之前让每个组件直接调 `git` 命令的模式），所有 GitLab 进程（puma / sidekiq / gitlab-shell 等）都不再直接 `git clone`，而是通过 RPC 调 Gitaly。优势：
+
+- 把 git 操作集中在一层服务，方便加缓存 / 监控 / 鉴权
+- 多个 Puma 实例共享同一个 Gitaly 后端，避免文件锁竞争
+- 后续可水平扩展为 Gitaly Cluster（[官方] /administration/gitaly/）
+
+![Admin → Gitaly Servers](images/gitlab-2.1-gitaly-servers.png)
+*图：Admin → Gitaly Servers 页（[本机验证] 实拍）。这是单节点 Omnibus 部署的 Gitaly 状态：存储 `default` / 地址 `unix:/var/opt/gitlab/gitaly/gitaly.socket` / 版本 19.1.1 / 启用状态。生产多副本部署这里会列出多个节点*
+
 ## 2.2 三种部署形态怎么选
 
 GitLab 服务端的 3 种官方打包方式（[官方] /install/）：
@@ -843,6 +854,11 @@ gitlab_rails['gitlab_signup_enabled'] = false
 
 `Admin area` → `Settings` → `General` → **Sign-up restrictions** → 关掉 `Sign-up enabled`
 
+刚部署完成的 GitLab 实例默认允许任何人注册账号，登录管理员后台后顶部会显示安全警告横幅：
+
+![Admin 仪表盘的安全警告横幅](images/gitlab-4.5-admin-overview.png)
+*图：Admin area → 仪表盘 页（[本机验证] 实拍）。部署完成后的两个默认安全警告：(1) 「Check the restrictions for new users」——实例开放注册，建议点 **停用** 关闭；(2) 「Web IDE single origin fallback is enabled」——Web IDE 单源回退启用，建议点 **Review settings** 去关掉。两个警告都要处理*
+
 ### 4.5.2 接入 SSO（LDAP / SAML / OAuth）
 
 UI 路径：`Admin area` → `Settings` → `General` → **Sign-in restrictions** 或 **Authentication and Provisioning**
@@ -977,7 +993,7 @@ sudo gitlab-ctl status              # 看进程状态
    （GitLab 19.1.1 把"改密码"从 Account 页拆到单独的 Access 子菜单下，跟 SSH Keys / GPG Keys 同级；早期版本在 Account 页）
 
 ![改密码页](images/gitlab-5.0.1b-change-password.png)
-*图：User Settings → Access → Password and authentication（[本机验证] 实拍）。`Change password` 区可改密码；下面的 `Two-factor Authentication` 也建议一并启用*
+*图：User Settings → Password and authentication → Change password 页（[本机验证] 实拍）。三个输入框：**当前密码** / **新密码** / **确认新密码**，下方 **保存密码** 按钮。2FA 设置在左侧 **Account** 下，不在这一页*
 4. **失败模式**：`initial_root_password` 文件**24 小时后自动删**——改完新密码永不过期，不改会被锁外
 
 ### 5.0.2 创建项目 + 第一次 git push [本机验证]
@@ -1876,7 +1892,7 @@ docker push registry.localhost:5000/mygroup/myproject/myimage:latest
 > 🌿 进阶 · 终端党
 
 ![glab 项目页](images/gitlab-5.11-glab-install.png)
-*图：GitLab.com 的 glab 项目页（[本机验证] 实拍）。glab 是 GitLab 官方 CLI；安装文档 + release 包都在这个项目*
+*图：GitLab.com 上的 cli 项目（glab 的代码仓库）的 **Code** 页（[本机验证] 实拍）。项目全名是 `cli`（可执行文件叫 `glab`），项目描述："A GitLab CLI tool bringing GitLab to your command line"。安装说明需点右侧 **README** 标签进入查看，不在本截图里*
 
 [GitLab CLI](https://gitlab.com/gitlab-org/cli)：
 
@@ -2911,6 +2927,11 @@ prometheus['listen_address'] = '0.0.0.0:9090'
 | `gitlab_cache_operation_duration_seconds` | Redis 缓存命中率 |
 | `puma_threads_running` / `puma_threads_max` | Puma 线程池使用 |
 
+Web UI 实时看 Sidekiq 队列状态：
+
+![Admin → Background Jobs (Sidekiq 监控)](images/gitlab-8.3-background-jobs.png)
+*图：Admin → Monitoring → Background Jobs 页（[本机验证] 实拍）。顶部 7 个计数器：**已处理 / 已失败 / 执行中 / 已进入队列 / 重试 / 已计划 / 已停滞**。下方面板选 **执行中 / 队列 / 重试 / 已计划 / 已停滞 / Cron** 看具体任务（[官方] /administration/admin_area/#background-jobs）。异常时看 **已失败** 和 **已停滞** 计数*
+
 ### 8.3.3 告警规则
 
 Prometheus alerting rules 配置在 `/etc/gitlab/gitlab-prometheus/alerts/*.yml`，关键告警：
@@ -3013,6 +3034,13 @@ sudo gitlab-ctl tail sidekiq
 sudo gitlab-ctl tail gitlab-rails/production
 # 通常看 JS 编译错误、worker timeout、PG/Redis 连接错误
 ```
+
+**2) Sidekiq 任务堆积 / 停滞**
+
+先看 Admin → Background Jobs 面板（[本机 8.3 节的截图](#833-prometheus--grafanaomnibus-自带)）——**已停滞** 和 **重试** 计数 > 0 就有问题：
+
+![Sidekiq 闲置页（健康基线）](images/gitlab-8.5-sidekiq-idle.png)
+*图：Admin → Sidekiq → 闲置 页（[本机验证] 实拍）。健康基线状态：执行中=0 / 已进入队列=0 / 重试=0 / 已停滞=2（容忍范围）。下面 **历史记录** 折线图看 30 天吞吐量趋势，突增 = 有问题。与异常状态对比：异常时 **已停滞** / **重试** / **已失败** 计数会跳到非零或持续上涨*
 
 **2) Sidekiq 队列堆积**
 
