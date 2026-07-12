@@ -94,8 +94,7 @@
   - 8.4 健康检查
   - 8.5 故障排查（[官方] /administration/troubleshooting/）
   - 8.6 安全维护
-  - 8.7 升级前 checklist（铁律）
-  - 8.8 容量规划速查
+  - 8.7 容量规划速查
 - [99 · 附录](#ch99)
   - A · 硬件要求速查
   - B · 命令速查
@@ -230,22 +229,9 @@
 
 ## 1.7 一次 GitLab 能给你什么
 
-按 DevOps 生命周期对齐（[官方] /user/get_started/）：
+DevOps 全流程（[官方] /user/get_started/）：**Manage**（用户/组/SSO）→ **Plan**（Issue/Epic/Roadmap）→ **Create**（Git/MR）→ **Verify**（CI/Runner）→ **Package**（Container/Package Registry）→ **Secure**（SAST/DAST/依赖/容器扫描）→ **Release**（Environments/Feature Flag/Pages）→ **Configure**（Terraform/K8s Agent）→ **Monitor**（Incident/Tracing）→ **Govern**（审计/合规）。
 
-| 生命周期阶段 | GitLab 能力 |
-|------------|------------|
-| **Manage**（组织） | 用户/组/子组/SSO |
-| **Plan**（规划） | Epics、Issues、Iterations、OKRs、Roadmaps |
-| **Create**（创建） | Git、Web IDE、Merge Requests、Code Owners |
-| **Verify**（验证） | CI/CD pipelines、Runner、merge trains |
-| **Package**（打包） | Container Registry、Package Registry（Maven/NPM/PyPI/Conan/NuGet）、Generic |
-| **Secure**（安全） | SAST、DAST、Dependency Scanning、Container Scanning、Secret Detection、License Compliance |
-| **Release**（发布） | Environments、Releases、Feature Flags、Pages、Review Apps |
-| **Configure**（配置） | Terraform 集成、Kubernetes Agent |
-| **Monitor**（监控） | Incident Management、Error Tracking、Tracing、Logs |
-| **Govern**（治理） | Audit Events、Compliance Frameworks、Value Stream Analytics |
-
-> 这张表的内容基于本教程抓取的 `/user/get_started/` 12 张卡片汇总（[官方]，详见 docs/gitlab-get-started/raw/）。
+> 每项的详细子功能散落在后续章节（§5 日常操作、§6 CI/CD、§7 安全扫描、§8 运维）。本表用于回答「GitLab 是什么」——能干什么的概览。
 
 ---
 
@@ -283,7 +269,7 @@ GitLab 由多个组件协作（[官方] /install/requirements/ + /architecture/a
 Gitaly 是 GitLab 自己封装的 Git RPC 服务（取代了之前让每个组件直接调 `git` 命令的模式），所有 GitLab 进程（puma / sidekiq / gitlab-shell 等）都不再直接 `git clone`，而是通过 RPC 调 Gitaly。优势：
 
 - 把 git 操作集中在一层服务，方便加缓存 / 监控 / 鉴权
-- 多个 Puma 实例共享同一个 Gitaly 后端，避免文件锁竞争
+- 多个 Puma 实例共享同一个 Gitaly 后端，避免文件锁冲突
 - 后续可水平扩展为 Gitaly Cluster（[官方] /administration/gitaly/）
 
 ![Admin → Gitaly Servers](images/gitlab-2.1-gitaly-servers.png)
@@ -483,6 +469,8 @@ sudo EXTERNAL_URL="https://gitlab.example.com" apt install gitlab-ce
 **CentOS / RHEL / AlmaLinux / Rocky：** 把上面 `apt` 全部换成 `dnf`，`.deb.sh` 换 `.rpm.sh`。
 
 > 🔥 **防火墙上**：`firewall-cmd --add-service=http --add-service=https --add-service=ssh --permanent && firewall-cmd --reload`
+>
+> 📌 **初始 root 密码**：Omnibus 路径与 Docker 一致（同一文件 `/etc/gitlab/initial_root_password`），命令和 24h 删除等机制详见 [§3.2.3](#323-初始-root-密码必读本机验证)。
 
 详细：[官方] /install/package/ubuntu/ 。
 
@@ -498,44 +486,6 @@ sudo EXTERNAL_URL="https://gitlab.example.com" apt install gitlab-ce
 - [ ] 改 `external_url` 为真实域名（容器 / Omnibus 改完都跑一次 `gitlab-ctl reconfigure`）
 - [ ] 设 cron 自动备份（§8.1）
 - [ ] 防火墙只暴露 22/80/443，其他全关
-
----
-
-
-### 3.3.1 装完到哪里去看初始 root 密码
-
-Omnibus 装完会自动生成一个随机 root 密码，存到临时文件：
-
-```bash
-# 1. 读初始密码
-sudo cat /etc/gitlab/initial_root_password
-# 输出类似：
-# # WARNING: This value is valid only in the first 24 hours ...
-# Password: 'xxxxxxxxxxxxxxxxxxxxxxxxxx'
-
-# 2. 浏览器访问 EXTERNAL_URL
-#    用户名: root
-#    密  码: 上面那一串（去掉 'Password: ' 前缀和 ' ' 引号）
-
-# 3. 登进去后立即改密码
-#    右上角头像 → Edit profile → Password
-```
-
-**几点说明**（以下每条标注了可信度；前 4 条是「能在你本机容器里读到原文字的」——你 `gitlab-ce` 19.1.1 部署后由 Omnibus 实际生成的文件，不是凭官方文档推论）：
-
-- **路径固定**：`/etc/gitlab/initial_root_password`，跟 `EXTERNAL_URL` 在哪无关 — **[官方]** `/install/next_steps/` 已抓原文。
-- **24 小时后会删，但有个重要细节**：文件末行原文 `NOTE: This file is automatically deleted after 24 hours on the next reconfigure run.` —— **[本机验证]**。意思是「**24h 超时**且**你跑了下一次 reconfigure**」两个条件都满足才真的删；超时了但没 reconfigure，文件**还在**。`/install/next_steps/` 只提「文件位置」，这一句「next reconfigure run」是 Omnibus 实际生成文件里的原话。超时重置用 `sudo gitlab-rake gitlab:password:reset[root]`（[本教程 §附录 B]）。
-- **`reconfigure` 是删除触发器，不是密码还魂**：同上原文 `on the next reconfigure run` 明确表明 reconfigure 是「删除」动作的一部分。严谨说法：**超时后的密码文件**在下一次 `gitlab-ctl reconfigure` 跑时被删；它**不会**被 reconfigure “重置倒计时”或“延期”。**[本机验证]**。
-- **这个密码只在 4 个条件都满足时才有效**（文件首段 5 行 WARNING 逐字总结）—— **[本机验证]**：
-  1. 你**安装前**用 `GITLAB_ROOT_PASSWORD` 环境变量设过密码，**或**用 `gitlab_rails['initial_root_password']` 设过；**或**不设、Omnibus 自己生成
-  2. **不是在数据库初始化之后**才改的 `gitlab.rb`（否则 GitLab 已重置为另一套密码）
-  3. 装好后你**没在 UI / CLI 改过 root 密码**
-  4. 这个文件是当下这次安装生成的
-  
-  任意一条不满足 → 用 GitLab 自己的 reset 流（**[官方]** 文件 WARNING 里给了链接）：<https://docs.gitlab.com/security/reset_user_password/#reset-the-root-password>
-- **不要 commit 到 git**：**路径推导**：`/etc/gitlab/` 不在代码仓库，不存在误 commit 风险；但该文件是否被 GitLab 的默认应用备份包含进来 —— Omnibus `backup-etc` 默认会备份 `/etc/gitlab` 整个目录（**[官方]** `/omnibus/settings/backups/` 已抓原文），所以**默认会被备份**，出备份时请记得加密（参见 §8.1 提醒）。
-- **装包时已设过密码**（`GITLAB_ROOT_PASSWORD` 环境变量 / `gitlab_rails['initial_root_password']`）：文件第一段 WARNING 原文明写这两个变量名 —— **[本机验证]**：原文证明了「**这些变量名是 Omnibus 钦定的覆盖入口**」。**实际优先顺序**（环境变量 vs gitlab.rb 哪边优先、是否会生成 initial_root_password）—— **[未独立验证]**，以官方安装文档为准。
-- **装不上 / 看不到这文件**：**[经验推测]** —— 多半是 `gitlab-ctl reconfigure` 没跑完，看 `sudo gitlab-ctl tail reconfigure` 日志。
 
 ---
 
@@ -682,100 +632,41 @@ gitlab_rails['gitlab_email_reply_to'] = 'noreply@qq.com'
 # gitlab_rails['smtp_ssl'] = false
 ```
 
-`gitlab-ctl reconfigure` 后用 [§4.3.3](#433-测试邮件qq-邮箱专用步骤) 的测试命令验证。
+`gitlab-ctl reconfigure` 后用 [§4.3.2](#432-测试邮件与失败模式) 的命令验证。
 
-### 4.3.2 通用测试方法（跨 SMTP 提供商）
+### 4.3.2 测试邮件与失败模式
 
-无论用 QQ 邮箱 / Gmail / AWS SES / 自建 Postfix，下面 3 个方法**通用**：
-
-**方法 A · Rake 任务**（[官方] 推荐，GitLab 16.0+）：
+每次改完 `gitlab.rb` 都要：
 
 ```bash
+sudo gitlab-ctl reconfigure    # 1. 让 GitLab 重新读配置（不重启服务）
 sudo gitlab-rake gitlab:notify_test_email['your@email.com','Test Subject','Test Body']
-# 方括号参数必须引号包；含空格时用单引号
+# 2. GitLab 16.0+ 官方推荐；GitLab 15 及更旧用 sudo gitlab-rails console + Notify.test_email(...).deliver_now
 ```
 
-**方法 B · Rails 控制台**（所有 GitLab 版本可用）：
+返回 `Email sent` + 收件箱收到 → 通；返回错误 → 看下表。
 
-```bash
-sudo gitlab-rails console
-# 等到提示符出现（约 30 秒），然后输入：
-Notify.test_email('your@email.com', 'Test Subject', 'Test Body').deliver_now
-# Ctrl+D 退出
-```
-
-**方法 C · 看 production.log**（三种场景都要看）：
-
-```bash
-sudo gitlab-ctl tail gitlab-rails                 # 实时跟踪
-# 或单独看 production.log
-sudo tail -f /var/log/gitlab/gitlab-rails/production.log | grep -i smtp
-```
-
-### 4.3.3 测试邮件（QQ 邮箱专用步骤）
-
-每次改完 `gitlab.rb` 都要跑这两步再测：
-
-```bash
-# 1. 让 GitLab 重新读配置（不重启服务）
-sudo gitlab-ctl reconfigure
-
-# 2. 发测试邮件（GitLab 16.0+ 推荐，官方 Rake 任务）
-sudo gitlab-rake gitlab:notify_test_email['your-qq-number@qq.com','GitLab SMTP 测试','正文测试']
-```
-
-**实测反馈**（按这个顺序看输出）：
-
-| 看到的输出 | 意思是 | 怎么修 |
-|-----------|--------|--------|
-| `Sent mail to ...`  + 收件箱收到邮件 | ✅ 通 | 收工 |
-| `535 Error: authentication failed` | 用户名或密码错 | `smtp_user_name` 写完整邮箱 `xxx@qq.com`；`smtp_password` 改成 **16 位授权码**（不是 QQ 密码），拿码步骤见 §4.3.1 |
-| `OpenSSL::SSL::SSLError` / `TLS connection failed` | SSL/STARTTLS 没配对 | 端口 465 时 `smtp_ssl = true` + `smtp_enable_starttls_auto = false`；端口 587 时反过来 |
-| `connection timed out` 到 `smtp.qq.com:465` | 端口被运营商封 / 防火墙挡 | 改用 587 + STARTTLS，或在防火墙放行 465/587 出站 |
-| 邮件发出去但进了垃圾箱 | DKIM/SPF 没配上 | 见下方「防进垃圾箱」段 |
-
-**防进垃圾箱**（QQ 邮箱给 Gmail/Outlook 发特别容易进垃圾）：
-
-QQ 邮箱要求发件人地址跟 SMTP 授权账号一致 —— `gitlab_email_from` 必须等于 `smtp_user_name`，否则 QQ 邮箱会改 From 或直接标垃圾：
-
-```ruby
-gitlab_rails['gitlab_email_from'] = 'your-qq-number@qq.com'   # 必须跟 smtp_user_name 一样
-gitlab_rails['gitlab_email_from_name'] = 'GitLab'
-```
-
-需要在 QQ 邮箱「设置 → 反垃圾 → 设置邮件发送邮箱」里把 GitLab 服务器的 IP 加入白名单（白名单机制，避免被自家反垃圾拦截）。
-
-> 旧版测试方法（GitLab 16.0 之前）仍可用，但不推荐：
-> ```bash
-> sudo gitlab-rails console
-> Notify.test_email('your@email.com', 'Test Subject', 'Test Body').deliver_now
-> # Ctrl+D 退出
-> ```
-
-### 4.3.4 失败模式 / 常见错误
-
-按报错频次排序：
+**失败模式 / 常见错误**（跨 SMTP 提供商通用，QQ 邮箱特定步骤标 🔹）：
 
 | # | 现象 | 根因 | 修复 |
 |---|------|------|------|
-| 1 | `535 Error: authentication failed` | `smtp_password` 写成了 QQ 登录密码而非授权码 | 见 §4.3.1 第 3 步拿 16 位授权码 |
+| 1 | `535 Error: authentication failed` | `smtp_password` 写成了 QQ 登录密码而非授权码 🔹 | 见 §4.3.1 第 3 步拿 16 位授权码 |
 | 2 | `OpenSSL::SSL::SSLError` / TLS 卡住 | 端口 465 配了 STARTTLS 或端口 587 配了 `smtp_ssl=true` | 二选一（参考 §4.3.1 配置表的 STARTTLS 注释） |
 | 3 | `connection timed out` 到 `smtp.qq.com:465` | 国内运营商封禁 25/465 出站 | 改用 587 + STARTTLS；在防火墙放行 465/587 出站 |
-| 4 | 邮件发出去但进垃圾箱 | `gitlab_email_from` ≠ `smtp_user_name`；缺 DKIM/SPF；GitLab 服务器 IP 未加白名单 | 见 §4.3.3 末尾「防进垃圾箱」段 |
+| 4 | 邮件发出去但进垃圾箱 | `gitlab_email_from` ≠ `smtp_user_name` 🔹；缺 DKIM/SPF；GitLab 服务器 IP 未加白名单 🔹 | `gitlab_email_from` 必须等于 `smtp_user_name`；QQ 邮箱「设置 → 反垃圾 → 白名单」加 GitLab 服务器 IP |
 | 5 | 改完 `gitlab.rb` 没生效 | 没跑 `gitlab-ctl reconfigure` | 改完任何 SMTP 配置**都必须** reconfigure；不要直接重启服务（reconfigure 已经会重载） |
-| 6 | 生产发送量触发 QQ 日上限 | 个人 QQ 邮箱每天 50 封左右，企业邮箱更高 | 多人团队用腾讯企业邮箱 / SendGrid / Mailgun / AWS SES（[官方] /omnibus/settings/smtp/#microsoft-365） |
-| 7 | 用 `gitlab_rails console` 测 SMTP 报错但实际邮件能发 | 测试命令拼写问题（如忘了 `.deliver_now`） | 务必带 `.deliver_now`；看返回对象类型不是 Exception |
-| 8 | 465 端口测试 OK 但 587 报错 / 反之 | STARTTLS 和 SSL 不是同一回事 | 见 §4.3.1 配置注释——不能两个都开，也不能两个都不开 |
+| 6 | 生产发送量触发 QQ 日上限 🔹 | 个人 QQ 邮箱每天 ~50 封，企业邮箱更高 | 多人团队用腾讯企业邮箱 / SendGrid / Mailgun / AWS SES（[官方] /omnibus/settings/smtp/#microsoft-365） |
+| 7 | 用 `gitlab_rails console` 测 SMTP 报错但实际邮件能发 | 忘了 `.deliver_now` | 务必带 `.deliver_now`；看返回对象类型不是 Exception |
+| 8 | 465 测试 OK 但 587 报错 / 反之 | STARTTLS 和 SSL 不是同一回事 | 见 §4.3.1 配置注释——不能两个都开，也不能两个都不开 |
 
 **预防清单**（生产上线前自检）：
 
-- [ ] `gitlab-ctl reconfigure` 跑过（不要漏）
-- [ ] 5.0.5 创建的 PAT 替换为真实 token，不是占位符
-- [ ] QQ 邮箱白名单加了 GitLab 服务器 IP
-- [ ] `gitlab_email_from` = `smtp_user_name`
+- [ ] `gitlab-ctl reconfigure` 跑过
+- [ ] QQ 邮箱白名单加了 GitLab 服务器 IP 🔹
+- [ ] `gitlab_email_from` = `smtp_user_name` 🔹
 - [ ] 选好端口（465 SSL **或** 587 STARTTLS，二选一）
 - [ ] `gitlab-rake gitlab:notify_test_email` 跑通
-- [ ] production.log 没有 `error` 或 `warn` 级别 SMTP 日志
+- [ ] production.log 没有 `error` / `warn` 级别 SMTP 日志
 
 ## 4.4 配置 HTTPS / SSL
 
@@ -854,10 +745,10 @@ gitlab_rails['gitlab_signup_enabled'] = false
 
 `Admin area` → `Settings` → `General` → **Sign-up restrictions** → 关掉 `Sign-up enabled`
 
-刚部署完成的 GitLab 实例默认允许任何人注册账号，登录管理员后台后顶部会显示安全警告横幅：
+刚部署完成的 GitLab 实例默认允许任何人注册账号，登录管理员后台后顶部会显示安全警告条幅：
 
-![Admin 仪表盘的安全警告横幅](images/gitlab-4.5-admin-overview.png)
-*图：Admin area → 仪表盘 页（[本机验证] 实拍）。部署完成后的两个默认安全警告：(1) 「Check the restrictions for new users」——实例开放注册，建议点 **停用** 关闭；(2) 「Web IDE single origin fallback is enabled」——Web IDE 单源回退启用，建议点 **Review settings** 去关掉。两个警告都要处理*
+![Admin 仪表板的安全警告条幅](images/gitlab-4.5-admin-overview.png)
+*图：Admin area → 仪表板 页（[本机验证] 实拍）。部署完成后的两个默认安全警告：(1) **Check the restrictions for new users**——实例开放注册，建议点**禁用** 关闭；(2) **Web IDE single origin fallback is enabled**——Web IDE 单源回退已启用，建议点 **Review settings** 去关掉。两个警告都要处理*
 
 ### 4.5.2 接入 SSO（LDAP / SAML / OAuth）
 
@@ -985,7 +876,7 @@ sudo gitlab-ctl status              # 看进程状态
 *图：GitLab 19.1.1 登录页（[本机验证] 实拍）。输入 Username + Password 点 Sign in*
 
 ![首次登录后的引导页](images/gitlab-5.0.1a-first-login.png)
-*图：GitLab 19 新用户首次登录后的 Home 主页（无项目时空状态）。GitLab 19 **不再强制引导**创建 group/project，老版本才有强制引导*
+*图：GitLab 19 首次 root 登录后**强制引导**创建 group/project（不能跳过）*
 
 1. 浏览器打开 <http://localhost/>
 2. 用 `root` + `initial_root_password` 登录（密码 `docker exec gitlab-ce cat /etc/gitlab/initial_root_password`）
@@ -993,7 +884,7 @@ sudo gitlab-ctl status              # 看进程状态
    （GitLab 19.1.1 把"改密码"从 Account 页拆到单独的 Access 子菜单下，跟 SSH Keys / GPG Keys 同级；早期版本在 Account 页）
 
 ![改密码页](images/gitlab-5.0.1b-change-password.png)
-*图：User Settings → Password and authentication → Change password 页（[本机验证] 实拍）。三个输入框：**当前密码** / **新密码** / **确认新密码**，下方 **保存密码** 按钮。2FA 设置在左侧 **Account** 下，不在这一页*
+*图：User Settings → Password and authentication → Change password 页（[本机验证] 实拍）。三个输入框：**当前密码** / **新密码** / **确认新密码**，下方**保存密码**按钮。2FA 设置在左侧 **Account** 下，不在这一页*
 4. **失败模式**：`initial_root_password` 文件**24 小时后自动删**——改完新密码永不过期，不改会被锁外
 
 ### 5.0.2 创建项目 + 第一次 git push [本机验证]
@@ -1114,6 +1005,8 @@ puts "EXPIRES=" + t.expires_at.to_s
 
 [本机验证] 标准 PAT 长度 **51 字符**。Console 输出常含水平省略号 `…`（U+2026，**不是 PowerShell 截断产生的，可能是真的字符混进了 token**） → **必须验证** `Write-Host "Token length: $($tok.Length)"` 期望 51；若 < 51，说明 token 在复制粘贴时被替换为占位符，不是被截断，**重新生成一个 token 即可**。
 
+> 🛠️ **运维向**：批量建 PAT / 写脚本调 API 用容器内 ruby 路径（`gitlab-rails runner` + `PersonalAccessToken.create!`）—— 见 [§99-B gitlab-rails 速查](#ch99)。
+
 ### 5.0.6 5 分钟健康检查 [本机验证]
 
 > 🔄 跨平台版本：下面 3 种任选其一（PowerShell 限 Windows；curl + jq 限 Linux/macOS 且需 `apt install jq` / `brew install jq`；Python 通用）。
@@ -1208,10 +1101,7 @@ print(f"✅ Projects: {len(projects)}")
 
 ### 5.1.1 创建一个空项目
 
-> 🌱 入门 · 5 分钟
->
-> 💡 **从 0 走通全流程**：[§5.0.2](#502-创建项目--第一次-git-push-本机验证) 已有 [本机验证] 步骤（Web UI + 第一次 git push）。
-> 本节只讲 **5.0 没涵盖的扩展**：表单字段完整说明 + CLI 路径（glab）。
+> 💡 [§5.0.2](#502-创建项目--第一次-git-push-本机验证) 已有 [本机验证] 完整流程（Web UI + 第一次 git push）。本节只讲扩展：表单字段 + CLI（glab）。
 
 #### 表单字段完整说明
 
@@ -1264,45 +1154,27 @@ git push -u origin --tags
 `+` → **New project** → **Import project** → 选来源 → 授权 → 选 repo → 导入
 
 
-### 5.1.5 Public vs Private 项目对比（两种入口，[本机验证]）
+### 5.1.5 Public vs Private 项目对比（[本机验证]）
 
-> 🌿 进阶 · 本节**不重复创建步骤**，详细流程见 [5.1.1](#511-创建一个空项目)。
-> 本节聚焦两个对比维度：**Public vs Private（可见性）** + **首页入口 vs 侧栏 `+` 入口**。
+> 本节只讲对比——创建流程见 [5.1.1](#511-创建一个空项目)。
 
-#### 示例项目（本节用作对比的两个 root 仓库）
+#### 两个维度的差异
 
-| 项目 | URL | 可见性 | 创建入口 |
-|------|-----|--------|----------|
-| `skills-repo` | `http://localhost/root/skills-repo` | **Public** | 首页中央 `Get started` → `Create blank` |
-| `dev-code-sample` | `http://localhost/root/dev-code-sample` | **Private** | 左侧栏 `+` → `New project` → `Create blank` |
+| 维度 | Public | Private |
+|------|--------|---------|
+| **谁能 clone / pull** | 任何人（无需账号） | 仅项目成员 |
+| **谁能 push** | 仅项目成员 | 仅项目成员 |
+| **典型场景** | 开源项目、文档站点、演示仓库 | 公司内部代码、未发布的实验 |
+| **首页入口默认** | ✅ Public（首页中央 `Get started` → `Create blank`） | ❌（默认 Private） |
+| **侧栏 `+` 入口默认** | ❌（默认 Private） | ✅ Private（`+` → `New project` → `Create blank`） |
 
-#### 对比维度 1：可见性（Visibility Level）
+> 💡 两个入口**最终跳到同一个表单页**，差异只在「默认 Visibility」。⚠️ Visibility 一旦创建**通常不可改回更严格级别**（[官方] /user/public_access/)。
 
-| 可见性 | 谁能 clone / pull | 谁能 push | 典型场景 |
-|--------|------------------|-----------|----------|
-| **Public** | 任何人（无需账号） | 仅项目成员 | 开源项目、文档站点、演示仓库 |
-| **Private** | 仅项目成员 | 仅项目成员 | 公司内部代码、未发布的实验 |
+![Public 项目 skills-repo](images/gitlab-5.1.5b-skills-repo-visibility.png)
+*图：`root/skills-repo`（Public）空仓库主页——任何匿名访问者能看到 main 分支和 README*
 
-> ⚠️ Visibility Level 一旦创建**通常不可改回更严格级别**（Public → Private 需要在项目设置中额外操作；[官方] /user/public_access/)。
-
-![Public 项目 skills-repo 设置页](images/gitlab-5.1.5b-skills-repo-visibility.png)
-*图：`root/skills-repo`（Public）项目 → Settings → General，展开"可见性，项目功能，权限"折叠区后可以看到**项目可见性 = 公开**（[本机验证]）*
-
-![Private 项目 dev-code-sample 设置页](images/gitlab-5.1.5c-dev-sample-visibility.png)
-*图：`root/dev-code-sample`（Private）项目 → Settings → General，展开"可见性，项目功能，权限"折叠区后可以看到**项目可见性 = 私有**（[本机验证]）*
-
-> 💡 GitLab 19 把"常规设置"路径从 `/<project>/-/settings/general` 改成了 `/<project>/edit`，**常规设置 = `/edit`**，**仓库设置 = `/-/settings/repository`**。
-
-#### 对比维度 2：创建入口（首页 vs 侧栏）
-
-| 对比维度 | 首页入口 | 侧栏 `+` 入口 |
-|----------|----------|---------------|
-| **触发位置** | 浏览器打开 `http://localhost` 后页面中央 **Get started** 按钮 | 左侧导航栏顶部 **`+`** 下拉 |
-| **默认 Visibility** | **Public**（默认选第一个卡片） | **Private**（默认选最后一个卡片） |
-| **适合场景** | 快速建公开仓库演示 | 正式私有项目 |
-| **入口明显程度** | 首页有醒目 CTA 按钮（新手友好） | 需要熟悉 GitLab 侧栏布局 |
-
-> 💡 两个入口**最终都跳到同一个表单页**，差异只在「默认选项」。表单字段详见 [5.1.1](#511-创建一个空项目)。
+![Private 项目 dev-code-sample](images/gitlab-5.1.5c-dev-sample-visibility.png)
+*图：`root/dev-code-sample`（Private）空仓库主页——未登录访问会被重定向到登录页*
 
 ---
 
@@ -1516,18 +1388,7 @@ carol 是 skills-repo 的 Reporter，但 **不是 dev-code-sample 的成员**（
 
 ### 5.2.1 分支模型
 
-GitLab 默认分支 `main`，也叫 **default branch**（[官方] /user/project/repository/branches/）。
-
-![项目分支列表](images/gitlab-5.2-branches.png)
-*图：项目 → 代码 → 分支 页（[本机验证] 实拍）。main 是默认分支、受保护；其他分支可在此查看/创建/删除*
-
-```bash
-# 创建并切换到新分支
-git checkout -b feature/login-page
-
-# 推送新分支
-git push -u origin feature/login-page
-```
+GitLab 默认分支 `main`（也叫 **default branch**）。`git checkout -b <branch>` + `git push -u origin <branch>` 创建推送——命令细节见 [§99-B git 速查](#ch99)。
 
 ### 5.2.2 受保护分支（Protected branch）
 
@@ -1547,10 +1408,7 @@ git push -u origin feature/login-page
 
 ### 5.2.3 创建一个 Merge Request
 
-> 🌱 入门 · 5 分钟
->
-> 💡 **从 0 走通全流程**：[§5.0.3](#503-提第一个-merge-request-本机验证) 已有 [本机验证] 步骤（`git checkout -b` + `git push -u` + Web UI Merge）。
-> 本节只讲 **5.0 没涵盖的扩展**：表单字段完整说明 + 创建 MR 的 4 种入口 + MR 默认分支选择策略。
+> 💡 [§5.0.3](#503-提第一个-merge-request-本机验证) 已有 [本机验证] 完整流程。本节只讲扩展：表单字段 + 4 种入口 + 默认分支策略。
 
 #### 4 种入口
 
@@ -1618,10 +1476,7 @@ git push
 
 ### 5.3.1 创建一个 Issue
 
-> 🌱 入门 · 5 分钟
->
-> 💡 **从 0 走通全流程**：[§5.0.4](#504-建第一个-issue-本机验证) 已有 [本机验证] 步骤（顶菜单 → Work items → 填标题 → Create）。
-> 本节只讲 **5.0 没涵盖的扩展**：表单字段完整说明 + GFM 描述模板 + 联动关闭 MR。
+> 💡 [§5.0.4](#504-建第一个-issue-本机验证) 已有 [本机验证] 完整流程。本节只讲扩展：表单字段 + GFM 描述模板 + 联动关闭 MR。
 
 #### 表单字段完整说明
 
@@ -1670,9 +1525,9 @@ Resolves #123
 
 MR 合并后这个 Issue 自动被关闭（关键字详见 [官方] /user/project/issues/issue_merge_requests/）
 
-### 5.3.2 模板（Issue templates）
+#### Issue 模板（项目内置）
 
-项目根目录建 `.gitlab/issue_templates/`：
+预存模板到 `.gitlab/issue_templates/bug.md`，新建 Issue 时自动出现 "Choose a template" 下拉（避免作者每次重写骨架）：
 
 ```bash
 mkdir -p .gitlab/issue_templates
@@ -1697,16 +1552,16 @@ cat > .gitlab/issue_templates/bug.md << 'EOF'
 EOF
 ```
 
-新建 Issue 时会自动出现 "Choose a template" 下拉。
+> 💡 与上方「GFM 描述模板示例」的区别：上面是**手动复制** Markdown 到描述框；这里是**项目内置**让 GitLab UI 下拉选。骨架可复用上面那套。
 
-### 5.3.3 Labels
+### 5.3.2 Labels
 
 `Issues` → **Labels**：
 
 - 命名建议：`bug`、`enhancement`、`feature`、`docs`、`priority::high` 等
 - 配合 scoped labels（`type::`、`priority::`）做过滤
 
-### 5.3.4 Issue Boards（看板）
+### 5.3.3 Issue Boards（看板）
 
 > 🌿 进阶 · 看板视图
 
@@ -1717,7 +1572,7 @@ EOF
 
 类似 Trello/Kanban——默认列 `Open / In Progress / Closed`，可加自定义列。Issue 在列之间拖动改状态。
 
-### 5.3.5 Milestones（里程碑）
+### 5.3.4 Milestones（里程碑）
 
 `Issues` → **Milestones** → **New milestone**：
 
@@ -1725,10 +1580,7 @@ EOF
 - 关联 Issue
 - 看进度条（已关闭 issue %）
 
-![Milestones 列表](images/gitlab-5.6-milestones.png)
-*图：项目 → 计划 → 里程碑 页（[本机验证] 实拍）。开放中/已关闭/全部三个标签页；右上 New milestone 创建；列表展示起止日期 + 进度条*
-
-### 5.3.6 Epics（组层级，Premium+）
+### 5.3.5 Epics（组层级，Premium+）
 
 `Group` → **Epics** → **New epic**：
 
@@ -1760,60 +1612,30 @@ GitLab 12 个规划工具中，**本教程重点讲 5 个**（各项下指向具
 | **Insights**（数据图表） | Free | /user/project/insights/ |
 | **Requirements**（需求跟踪） | Premium+ | /user/project/requirements/ |
 
-## 5.5 管理代码（[官方] /user/get_started/get_started_managing_code/）
+## 5.5 其他工具汇总（Wiki / Snippet / Release / Pages / Registry / glab）
 
-完整工作流（[官方]）：
+| 工具 | 一句话 | 详细路径 | 图 |
+|------|--------|---------|-----|
+| **Wiki** | 项目自带 Markdown 文档站，支持版本历史 + Sidebar | `项目菜单` → **Wiki** → **Create your first page** | ![Wiki](images/gitlab-5.5-wiki.png) |
+| **Snippet** | 个人/团队代码片段分享（多文件 + 语法高亮） | `+` → **New snippet**，选 Visibility | ![Snippet](images/gitlab-5.7-snippet-new.png) |
+| **Release** | 基于 Git tag 的版本发布（带 Markdown notes + 二进制） | `Deployments` → **Releases** → **New release** | ![Release](images/gitlab-5.8-release-new.png) |
+| **Pages** | 静态网站托管（根目录 `.gitlab-ci.yml` 定义 `pages` job） | §5.9 + §4.7（server 端 `pages_external_url`） | — |
+| **Registry** | 项目内置 Container / Package Registry | §5.10 + §4.6 | ![Packages](images/gitlab-5.10-packages.png) |
+| **glab** | GitLab 官方 CLI（issue / mr / ci / api / repo） | §5.11 | ![glab](images/gitlab-5.11-glab-install.png) |
 
-1. **创建仓库**（Project）→ 5.1
-2. **写代码**：
-   - Web Editor（编辑单个文件）
-   - Web IDE（编辑多个文件，VS Code 内核）
-   - 本地克隆 + IDE
-   - Remote Workspaces（云端开发环境）
-3. **保存并推送** → commit + push
-4. **Code Review** → MR
-5. **合并** → merge to default branch
-6. **保护** → Protected branches + Code Owners
+> **管理代码完整工作流**（写 → commit → push → MR → merge → protect）见 §5.1 / §5.2；§5.5 不重复展开。
 
 ## 5.6 Wiki
 
-> 🌿 进阶 · 文档协作
-
-![Wiki 首页](images/gitlab-5.5-wiki.png)
-*图：项目 Wiki 页（[本机验证] 实拍）。首页 `home` 可点编辑；右侧 Pages 列表；底部 Create your first page 入口*
-
-`项目菜单` → **Wiki** → **Create your first page**：
-
-- 每页是单独 Markdown
-- 支持版本历史（看旧版本、对比 diff）
-- 支持 Sidebar（在 `_sidebar.md`）
+> 详见 §5.5 汇总表。补充：每页独立 Markdown，支持版本历史 + Sidebar（在 `_sidebar.md`）。
 
 ## 5.7 Snippet（代码片段共享）
 
-> 🌿 进阶 · 个人/团队代码片段
-
-![New Snippet](images/gitlab-5.7-snippet-new.png)
-*图：New snippet 页（[本机验证] 实拍）。填 Title + 文件（多文件）+ Visibility + 选语言；下方 snippets editor 自动高亮*
-
-`+` → **New snippet**：
-
-- **Visibility**：Private / Internal / Public
-- 支持多文件、语法高亮、评论
+> 详见 §5.5 汇总表。补充：Visibility 可选 Private / Internal / Public。
 
 ## 5.8 Release（[官方] /user/project/releases/）
 
-> 🌿 进阶 · 发版本管理
-
-![New Release 表单](images/gitlab-5.8-release-new.png)
-*图：New release 页（[本机验证] 实拍）。基于 Git tag 创建；填 Title / Release notes（Markdown）；可上传 binary assets*
-
-`项目菜单` → **Deployments** → **Releases** → **New release**：
-
-- Tag（基于某个 Git tag）
-- Release notes（Markdown）
-- 关联 Milestone
-- 上传二进制（assets）
-- 可触发 release pipeline
+> 详见 §5.5 汇总表。补充：基于 Git tag，可关联 Milestone + 上传二进制资产 + 触发 release pipeline。
 
 ## 5.9 Pages（静态站点，[官方] /user/project/pages/）
 
@@ -1892,7 +1714,7 @@ docker push registry.localhost:5000/mygroup/myproject/myimage:latest
 > 🌿 进阶 · 终端党
 
 ![glab 项目页](images/gitlab-5.11-glab-install.png)
-*图：GitLab.com 上的 cli 项目（glab 的代码仓库）的 **Code** 页（[本机验证] 实拍）。项目全名是 `cli`（可执行文件叫 `glab`），项目描述："A GitLab CLI tool bringing GitLab to your command line"。安装说明需点右侧 **README** 标签进入查看，不在本截图里*
+*图：GitLab.com 上的 cli 项目（glab 的代码仓库）的 **Code** 页（[本机验证] 实拍）。项目全名是 `cli`（可执行文件名叫 `glab`），项目描述："A GitLab CLI tool bringing GitLab to your command line"。安装说明需点右上角 **README** 标签进入查看，不在本截图里*
 
 [GitLab CLI](https://gitlab.com/gitlab-org/cli)：
 
@@ -2181,6 +2003,8 @@ sudo gitlab-runner verify
 sudo journalctl -u gitlab-runner -f
 ```
 
+> 📌 **Runner 配置进阶**：`/etc/gitlab-runner/config.toml` 的 `concurrent`（最大并发）、`[runners.docker]` 的 `image` / `volumes` / `privileged` 等字段——修改后 `sudo gitlab-runner restart` 生效；完整字段见 [官方] /runner/configuration/advanced-configuration/。
+
 ### 6.5.4 Runner on Windows（[官方] /runner/install/windows/）
 
 ```powershell
@@ -2215,37 +2039,6 @@ docker run -d --name gitlab-runner --restart always \
 | **custom** | 自己写 executor | 自定义 |
 
 > **生产推荐**：docker 或 kubernetes executor。
-
-### 6.5.7 关键 config.toml 配置（docker executor）
-
-> 💡 本教程以本机 Docker 部署为案例——`url` 写 `http://localhost`。生产域部署时换 `https://gitlab.example.com/` 即可。
-
-```toml
-# /etc/gitlab-runner/config.toml
-concurrent = 4   # 最多同时跑 4 个 job
-
-[[runners]]
-  name = "docker-runner"
-  url = "http://localhost/"      # 本机部署用 http://localhost；生产域名改 https://gitlab.example.com/
-  token = "glrt-xxx"             # 从注册时拿的 token，写这里
-  executor = "docker"
-  [runners.docker]
-    image = "alpine:latest"
-    privileged = false
-    volumes = ["/cache"]
-    pull_policy = "if-not-present"
-    network_mode = "bridge"
-    shm_size = 0
-  [runners.cache]                # 默认本地卷缓存；需要 S3/GCS/Azure 看 [官方] /runner/configuration/advanced-configuration/#the-runners-cache-section
-    Type = "volume"
-
-```
-
-修改后：
-
-```bash
-sudo gitlab-runner restart
-```
 
 ## 6.6 制品（Artifacts，[官方] /ci/yaml/#artifacts）
 
@@ -2514,97 +2307,38 @@ sast:
 ## 7.4 各扫描详解
 
 > 🌳 高级 · 7 种扫描器
+>
+> **通用触发方式**（详见 §7.3 完整示例）：在 `.gitlab-ci.yml` 加 `include: - template: Jobs/<Scanner>.gitlab-ci.yml`。**查看结果**：所有扫描器统一在 `Project` → **Secure** → **Vulnerability report**。
 
 ### 7.4.1 Secret Detection（密钥检测，[官方] /user/application_security/secret_detection/）
 
-**功能**：扫代码里有没有泄露的密钥（API key、私钥、token、密码）。
-
-支持的密钥类型：AWS、GCP、Azure、GitHub PAT、Slack token、数据库连接串、私钥等几十种。
-
-**触发**：
-
-```yaml
-include:
-  - template: Jobs/Secret-Detection.gitlab-ci.yml
-```
-
-**查看结果**：`Project` → **Secure** → **Vulnerability report**
+扫代码里的密钥泄露——API key、私钥、token、密码等几十种模式（AWS / GCP / Azure / GitHub PAT / Slack token / 数据库连接串 / 私钥…）。
 
 ### 7.4.2 Dependency Scanning（依赖扫描，[官方] /user/application_security/dependency_scanning/）
 
-**功能**：扫 `package.json`、`requirements.txt`、`pom.xml`、`Gemfile.lock`、`go.mod` 等依赖文件，看有没有已知漏洞（CVE）。
-
-**支持语言**：
-- JavaScript / Node.js
-- Python
-- Java / Scala
-- Ruby
-- Go
-- PHP
-- .NET
-- Rust（部分）
-- C/C++（部分）
-
-**触发**：
-
-```yaml
-include:
-  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
-```
-
-可生成 SBOM（Software Bill of Materials，软件物料清单）——CycloneDX 格式。
+扫 `package.json`、`requirements.txt`、`pom.xml`、`Gemfile.lock`、`go.mod` 等依赖文件的已知 CVE。支持 JS / Python / Java / Scala / Ruby / Go / PHP / .NET / Rust（部分）/ C/C++（部分）。可生成 SBOM（CycloneDX 格式）。
 
 ### 7.4.3 Container Scanning（容器镜像扫描，[官方] /user/application_security/container_scanning/）
 
-**功能**：扫 Docker 镜像里的 OS 包和语言库漏洞。
+扫 Docker 镜像里的 OS 包和语言库漏洞。需指定镜像：
 
 ```yaml
-include:
-  - template: Jobs/Container-Scanning.gitlab-ci.yml
-
 container_scanning:
   variables:
-    CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    # 或指定其他镜像: CS_IMAGE: alpine:3.20
+    CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA   # 或其他镜像: alpine:3.20
 ```
 
 底层用 [Trivy](https://github.com/aquasecurity/trivy) 或 [Grype](https://github.com/anchore/grype)。
 
 ### 7.4.4 SAST（静态分析，[官方] /user/application_security/sast/）
 
-**功能**：扫源码里潜在漏洞（SQL 注入、XSS、命令注入、路径遍历、硬编码凭证、不安全反序列化等）。
-
-**支持语言**：
-- C/C++
-- C#
-- Go
-- Java / Kotlin / Scala
-- JavaScript / TypeScript
-- Python
-- Ruby
-- PHP
-- Swift
-
-**触发**：
-
-```yaml
-include:
-  - template: Jobs/SAST.gitlab-ci.yml
-```
+扫源码里潜在漏洞（SQL 注入、XSS、命令注入、路径遍历、硬编码凭证、不安全反序列化等）。支持 C/C++ / C# / Go / Java/Kotlin/Scala / JS/TS / Python / Ruby / PHP / Swift。
 
 ### 7.4.5 DAST（动态分析，[官方] /user/application_security/dast/）
 
-**功能**：跑起来后模拟攻击，扫运行时漏洞。
-
-**特点**：
-- 需要应用**部署到测试环境**才能扫
-- 跑时间长
-- Ultimate 才能用
+跑起来后模拟攻击扫运行时漏洞。**特点**：需要应用部署到测试环境才能扫；跑时间长；**Ultimate 专属**。
 
 ```yaml
-include:
-  - template: Jobs/DAST.gitlab-ci.yml
-
 dast:
   variables:
     DAST_TARGET_URL: "https://staging.example.com"
@@ -2614,20 +2348,11 @@ dast:
 
 ### 7.4.6 IaC Scanning（[官方] /user/application_security/iac_scanning/）
 
-**功能**：扫 Terraform/Ansible/Kubernetes manifests 里的错误配置。
-
-```yaml
-include:
-  - template: Jobs/IaC-Scanning.gitlab-ci.yml
-```
-
-检测项：S3 bucket 公开、SSH 0.0.0.0/0、密码硬编码、缺失加密等。
+扫 Terraform/Ansible/Kubernetes manifests 的错误配置——S3 bucket 公开、SSH 0.0.0.0/0、密码硬编码、缺失加密等。
 
 ### 7.4.7 License Compliance（[官方] /user/application_security/license_compliance/）
 
-**功能**：扫依赖用了什么开源许可证，告诉你是否有 GPL 等强传染协议。
-
-Premium+ 功能。
+扫依赖的开源许可证，告诉你是否有 GPL 等强传染协议。**Premium+** 功能。
 
 ## 7.5 在 MR 里看扫描结果
 
@@ -2839,6 +2564,20 @@ GitLab 采用 **Y 模式版本号**（如 `17.5.3`）：
 
 [官方] 升级路径表：<https://docs.gitlab.com/update/#upgrade-paths>
 
+#### 升级前 checklist（铁律）
+
+> 来自 [官方] 升级文档 + 实战经验，**每次升级前必须过一遍**：
+
+- [ ] **已备份**（`gitlab-backup create` + `gitlab-ctl backup-etc`）
+- [ ] **备份异地验证**（不能在同盘——盘坏了备份也丢）
+- [ ] **升级路径核对**（按 minor 顺序不能跳）
+- [ ] **停机窗口预估**（通常 30-60 分钟）
+- [ ] **测试环境先升**（如有）
+- [ ] **看 release notes**（breaking changes + deprecations）
+- [ ] **DB migration 检查**（跨 minor 升级 PG 也会升级，需要时间）
+- [ ] **SMTP / OAuth 配置还在**（升级不会动 gitlab.rb）
+- [ ] **升完跑 `gitlab-rake gitlab:check`**
+
 ### 8.2.2 Omnibus 升级
 
 ```bash
@@ -2926,11 +2665,6 @@ prometheus['listen_address'] = '0.0.0.0:9090'
 | `pg_stat_activity_count` | 数据库连接数 |
 | `gitlab_cache_operation_duration_seconds` | Redis 缓存命中率 |
 | `puma_threads_running` / `puma_threads_max` | Puma 线程池使用 |
-
-Web UI 实时看 Sidekiq 队列状态：
-
-![Admin → Background Jobs (Sidekiq 监控)](images/gitlab-8.3-background-jobs.png)
-*图：Admin → Monitoring → Background Jobs 页（[本机验证] 实拍）。顶部 7 个计数器：**已处理 / 已失败 / 执行中 / 已进入队列 / 重试 / 已计划 / 已停滞**。下方面板选 **执行中 / 队列 / 重试 / 已计划 / 已停滞 / Cron** 看具体任务（[官方] /administration/admin_area/#background-jobs）。异常时看 **已失败** 和 **已停滞** 计数*
 
 ### 8.3.3 告警规则
 
@@ -3035,13 +2769,6 @@ sudo gitlab-ctl tail gitlab-rails/production
 # 通常看 JS 编译错误、worker timeout、PG/Redis 连接错误
 ```
 
-**2) Sidekiq 任务堆积 / 停滞**
-
-先看 Admin → Background Jobs 面板（[本机 8.3 节的截图](#833-prometheus--grafanaomnibus-自带)）——**已停滞** 和 **重试** 计数 > 0 就有问题：
-
-![Sidekiq 闲置页（健康基线）](images/gitlab-8.5-sidekiq-idle.png)
-*图：Admin → Sidekiq → 闲置 页（[本机验证] 实拍）。健康基线状态：执行中=0 / 已进入队列=0 / 重试=0 / 已停滞=2（容忍范围）。下面 **历史记录** 折线图看 30 天吞吐量趋势，突增 = 有问题。与异常状态对比：异常时 **已停滞** / **重试** / **已失败** 计数会跳到非零或持续上涨*
-
 **2) Sidekiq 队列堆积**
 
 ```bash
@@ -3139,35 +2866,7 @@ sidekiq['max_concurrency'] = 10   # 默认 25
 puma['worker_processes'] = 2   # 默认是 CPU 核数
 ```
 
-### 8.5.3 终极：进 Rails console 排查
-
-```bash
-sudo gitlab-rails console
-```
-
-打开 IRB 一样的 Ruby shell，可以查 GitLab 数据库、调模型、调方法。生产环境慎用，但这是终极工具。
-
-```ruby
-# 看用户
-User.find_by(username: 'alice')
-
-# 看项目
-Project.find_by_full_path('mygroup/myproject')
-
-# 改用户密码（root 账号 24 小时密码失效的替代方案）
-user = User.find_by(email: 'admin@example.com')
-user.password = 'NewSecurePassword123'
-user.password_confirmation = 'NewSecurePassword123'
-user.save!
-
-# 看 pipeline 状态
-Ci::Pipeline.last(5).each { |p| puts "#{p.id}: #{p.status}" }
-
-# 看 stuck MR
-MergeRequest.where(state: 'opened').where('updated_at < ?', 30.days.ago).count
-```
-
-退出：`Ctrl+D`
+> 🛠️ **进 Rails console 终极排查**：`sudo gitlab-rails console` 启动 IRB-like Ruby shell；常用命令（查用户/项目、改密码、看 pipeline、看 stuck MR）见 [§99-B gitlab-rails 速查](#ch99)。
 
 ## 8.6 安全维护
 
@@ -3195,21 +2894,7 @@ sudo gitlab-ctl reconfigure
 
 Premium+ 才有 audit log，记录所有敏感操作（创建用户、改权限、删除项目、改密钥）。定期下载归档。
 
-## 8.7 升级前 checklist（铁律）
-
-> 来自 [官方] 升级文档 + 实战经验
-
-- [ ] **已备份**（`gitlab-backup create` + `gitlab-ctl backup-etc`）
-- [ ] **备份异地验证**（不能在同盘——盘坏了备份也丢）
-- [ ] **升级路径核对**（看 [官方] upgrade paths 表）
-- [ ] **停机窗口预估**（通常 30-60 分钟）
-- [ ] **测试环境先升**（如有）
-- [ ] **看 release notes**（breaking changes + deprecations）
-- [ ] **DB migration 检查**（跨 minor 升级 PG 也会升级，需要时间）
-- [ ] **SMTP / OAuth 配置还在**（升级不会动 gitlab.rb）
-- [ ] **升完跑 `gitlab-rake gitlab:check`**
-
-## 8.8 容量规划速查
+## 8.7 容量规划速查
 
 按用户数选配置——具体表看 **[§99-A · 硬件要求速查](#99-)**。
 
