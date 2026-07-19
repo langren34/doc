@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Node.js 模块系统选择</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f8fafc;
+    --fg: #172033;
+    --muted: #5b6475;
+    --line: #64748b;
+    --neutral: #e2e8f0;
+    --input: #bfdbfe;
+    --process: #c7d2fe;
+    --storage: #99f6e4;
+    --external: #fde68a;
+    --risk: #fecaca;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --fg: #e5e7eb;
+      --muted: #a3adbd;
+      --line: #94a3b8;
+      --neutral: #334155;
+      --input: #1d4ed8;
+      --process: #4338ca;
+      --storage: #0f766e;
+      --external: #92400e;
+      --risk: #991b1b;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.4 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  main {
+    max-width: 980px;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+  svg { width: 100%; height: auto; display: block; }
+  .title { font-size: 20px; font-weight: 650; fill: var(--fg); }
+  .label { font-size: 13px; font-weight: 600; fill: var(--fg); }
+  .small { font-size: 11px; fill: var(--muted); }
+  .node { stroke: var(--line); stroke-width: 1; }
+  .neutral { fill: var(--neutral); }
+  .input { fill: var(--input); }
+  .process { fill: var(--process); }
+  .storage { fill: var(--storage); }
+  .external { fill: var(--external); }
+  .edge { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  .zone { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 6 5; opacity: 0.6; }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; fill: var(--muted); }
+</style>
+<main>
+  <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
+    <text x="400" y="28" text-anchor="middle" class="title">Node.js 模块系统选择：CommonJS vs ES Modules</text>
+
+    <!-- CommonJS -->
+    <rect x="40" y="60" width="340" height="280" rx="12" class="zone" />
+    <text x="210" y="85" text-anchor="middle" class="label">CommonJS（传统）</text>
+
+    <rect x="80" y="110" width="120" height="46" rx="8" class="node input" />
+    <text x="140" y="133" text-anchor="middle" class="label">导出</text>
+    <text x="140" y="149" text-anchor="middle" class="code">module.exports = {}</text>
+
+    <rect x="220" y="110" width="120" height="46" rx="8" class="node input" />
+    <text x="280" y="133" text-anchor="middle" class="label">导入</text>
+    <text x="280" y="149" text-anchor="middle" class="code">const x = require('./a')</text>
+
+    <rect x="80" y="200" width="260" height="110" rx="8" class="node neutral" />
+    <text x="210" y="225" text-anchor="middle" class="label">适合场景</text>
+    <text x="210" y="247" text-anchor="middle" class="small">• 旧项目 / npm 包兼容</text>
+    <text x="210" y="267" text-anchor="middle" class="small">• 动态 require（条件加载）</text>
+    <text x="210" y="287" text-anchor="middle" class="small">• 默认 .js 文件格式</text>
+
+    <!-- ESM -->
+    <rect x="420" y="60" width="340" height="280" rx="12" class="zone" />
+    <text x="590" y="85" text-anchor="middle" class="label">ES Modules（现代）</text>
+
+    <rect x="460" y="110" width="120" height="46" rx="8" class="node process" />
+    <text x="520" y="133" text-anchor="middle" class="label">导出</text>
+    <text x="520" y="149" text-anchor="middle" class="code">export function fn() {}</text>
+
+    <rect x="600" y="110" width="120" height="46" rx="8" class="node process" />
+    <text x="660" y="133" text-anchor="middle" class="label">导入</text>
+    <text x="660" y="149" text-anchor="middle" class="code">import { fn } from './a'</text>
+
+    <rect x="460" y="200" width="260" height="110" rx="8" class="node neutral" />
+    <text x="590" y="225" text-anchor="middle" class="label">适合场景</text>
+    <text x="590" y="247" text-anchor="middle" class="small">• 新项目 / TypeScript 项目</text>
+    <text x="590" y="267" text-anchor="middle" class="small">• 静态分析 / Tree-shaking</text>
+    <text x="590" y="287" text-anchor="middle" class="small">• 顶层 await</text>
+
+    <!-- Arrow -->
+    <text x="400" y="200" text-anchor="middle" class="label">或</text>
+
+    <!-- Recommendation -->
+    <rect x="240" y="360" width="320" height="44" rx="8" class="node storage" />
+    <text x="400" y="387" text-anchor="middle" class="label">新项目推荐：package.json 设置 "type": "module"</text>
+
+    <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="var(--line)" />
+      </marker>
+    </defs>
+  </svg>
+</main>
