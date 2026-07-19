@@ -1,0 +1,119 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f8fafc;
+    --fg: #172033;
+    --muted: #5b6475;
+    --line: #64748b;
+    --neutral: #e2e8f0;
+    --input: #bfdbfe;
+    --process: #c7d2fe;
+    --storage: #99f6e4;
+    --external: #fde68a;
+    --risk: #fecaca;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --fg: #e5e7eb;
+      --muted: #a3adbd;
+      --line: #94a3b8;
+      --neutral: #334155;
+      --input: #1d4ed8;
+      --process: #4338ca;
+      --storage: #0f766e;
+      --external: #92400e;
+      --risk: #991b1b;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.4 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  main {
+    max-width: 980px;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+  svg { width: 100%; height: auto; display: block; }
+  .title { font-size: 20px; font-weight: 650; fill: var(--fg); }
+  .label { font-size: 13px; font-weight: 600; fill: var(--fg); }
+  .small { font-size: 11px; fill: var(--muted); }
+  .node { stroke: var(--line); stroke-width: 1; }
+  .neutral { fill: var(--neutral); }
+  .input { fill: var(--input); }
+  .process { fill: var(--process); }
+  .storage { fill: var(--storage); }
+  .external { fill: var(--external); }
+  .risk { fill: var(--risk); }
+  .edge { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  .diamond { fill: var(--external); stroke: var(--line); stroke-width: 1; }
+</style>
+    <text x="400" y="28" text-anchor="middle" class="title">Node.js 日常排查问题流程</text>
+
+    <!-- Start -->
+    <rect x="340" y="50" width="120" height="44" rx="22" class="node input" />
+    <text x="400" y="77" text-anchor="middle" class="label">遇到问题</text>
+
+    <!-- Step 1 -->
+    <polygon points="400,120 460,155 400,190 340,155" class="diamond" />
+    <text x="400" y="152" text-anchor="middle" class="label">程序能否启动？</text>
+
+    <!-- No branch -->
+    <rect x="80" y="140" width="140" height="50" rx="8" class="node risk" />
+    <text x="150" y="164" text-anchor="middle" class="label">检查语法错误</text>
+    <text x="150" y="180" text-anchor="middle" class="small">node app.js 报错信息</text>
+
+    <line x1="340" y1="155" x2="220" y2="155" class="edge" marker-end="url(#arrow)" />
+    <text x="290" y="148" text-anchor="middle" class="small">否</text>
+
+    <!-- Yes branch -->
+    <rect x="560" y="140" width="140" height="50" rx="8" class="node process" />
+    <text x="630" y="164" text-anchor="middle" class="label">检查运行时行为</text>
+    <text x="630" y="180" text-anchor="middle" class="small">console.log / 日志</text>
+
+    <line x1="460" y1="155" x2="560" y2="155" class="edge" marker-end="url(#arrow)" />
+    <text x="510" y="148" text-anchor="middle" class="small">是</text>
+
+    <!-- Step 2 -->
+    <polygon points="400,260 460,295 400,330 340,295" class="diamond" />
+    <text x="400" y="292" text-anchor="middle" class="label">是否是性能问题？</text>
+    <line x1="150" y1="190" x2="150" y2="240" class="edge" />
+    <line x1="150" y1="240" x2="340" y2="280" class="edge" marker-end="url(#arrow)" />
+    <line x1="630" y1="190" x2="630" y2="240" class="edge" />
+    <line x1="630" y1="240" x2="460" y2="280" class="edge" marker-end="url(#arrow)" />
+
+    <!-- Performance -->
+    <rect x="80" y="360" width="140" height="50" rx="8" class="node external" />
+    <text x="150" y="384" text-anchor="middle" class="label">性能分析工具</text>
+    <text x="150" y="400" text-anchor="middle" class="small">--prof / 火焰图</text>
+
+    <!-- Logic -->
+    <rect x="560" y="360" width="140" height="50" rx="8" class="node storage" />
+    <text x="630" y="384" text-anchor="middle" class="label">调试器</text>
+    <text x="630" y="400" text-anchor="middle" class="small">--inspect / console</text>
+
+    <line x1="340" y1="295" x2="220" y2="340" class="edge" marker-end="url(#arrow)" />
+    <text x="290" y="295" text-anchor="middle" class="small">是</text>
+
+    <line x1="460" y1="295" x2="560" y2="340" class="edge" marker-end="url(#arrow)" />
+    <text x="510" y="295" text-anchor="middle" class="small">否</text>
+
+    <!-- Common commands -->
+    <rect x="280" y="440" width="240" height="44" rx="8" class="node neutral" />
+    <text x="400" y="467" text-anchor="middle" class="label">常用检查：node -v / npm -v / npm list / npm audit</text>
+
+    <line x1="150" y1="410" x2="150" y2="430" class="edge" />
+    <line x1="150" y1="430" x2="280" y2="452" class="edge" marker-end="url(#arrow)" />
+    <line x1="630" y1="410" x2="630" y2="430" class="edge" />
+    <line x1="630" y1="430" x2="520" y2="452" class="edge" marker-end="url(#arrow)" />
+
+    <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="var(--line)" />
+      </marker>
+    </defs>
+  </svg>

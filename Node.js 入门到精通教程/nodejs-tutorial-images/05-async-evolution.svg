@@ -1,0 +1,100 @@
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+  <style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f8fafc;
+    --fg: #172033;
+    --muted: #5b6475;
+    --line: #64748b;
+    --neutral: #e2e8f0;
+    --input: #bfdbfe;
+    --process: #c7d2fe;
+    --storage: #99f6e4;
+    --external: #fde68a;
+    --risk: #fecaca;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --fg: #e5e7eb;
+      --muted: #a3adbd;
+      --line: #94a3b8;
+      --neutral: #334155;
+      --input: #1d4ed8;
+      --process: #4338ca;
+      --storage: #0f766e;
+      --external: #92400e;
+      --risk: #991b1b;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.4 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  main {
+    max-width: 980px;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+  svg { width: 100%; height: auto; display: block; }
+  .title { font-size: 20px; font-weight: 650; fill: var(--fg); }
+  .label { font-size: 13px; font-weight: 600; fill: var(--fg); }
+  .small { font-size: 11px; fill: var(--muted); }
+  .node { stroke: var(--line); stroke-width: 1; }
+  .neutral { fill: var(--neutral); }
+  .input { fill: var(--input); }
+  .process { fill: var(--process); }
+  .storage { fill: var(--storage); }
+  .external { fill: var(--external); }
+  .risk { fill: var(--risk); }
+  .edge { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  .code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    fill: var(--muted);
+  }
+</style>
+    <text x="400" y="28" text-anchor="middle" class="title">异步编程演进：Callback → Promise → async/await</text>
+
+    <!-- Callback -->
+    <rect x="40" y="70" width="220" height="100" rx="8" class="node risk" />
+    <text x="150" y="96" text-anchor="middle" class="label">Callback 回调</text>
+    <text x="150" y="118" text-anchor="middle" class="code">fs.readFile(path, (err, data) => { ... })</text>
+    <text x="150" y="140" text-anchor="middle" class="small">优点：简单直接</text>
+    <text x="150" y="158" text-anchor="middle" class="small">缺点：嵌套多时代码难读（回调地狱）</text>
+
+    <!-- Promise -->
+    <rect x="290" y="70" width="220" height="100" rx="8" class="node process" />
+    <text x="400" y="96" text-anchor="middle" class="label">Promise</text>
+    <text x="400" y="118" text-anchor="middle" class="code">fs.readFile(path).then(data => ...)</text>
+    <text x="400" y="140" text-anchor="middle" class="small">优点：链式调用，逻辑清晰</text>
+    <text x="400" y="158" text-anchor="middle" class="small">适合：顺序异步任务 / 并行 Promise.all</text>
+
+    <!-- async/await -->
+    <rect x="540" y="70" width="220" height="100" rx="8" class="node input" />
+    <text x="650" y="96" text-anchor="middle" class="label">async/await</text>
+    <text x="650" y="118" text-anchor="middle" class="code">const data = await fs.readFile(path)</text>
+    <text x="650" y="140" text-anchor="middle" class="small">优点：像写同步代码一样直观</text>
+    <text x="650" y="158" text-anchor="middle" class="small">适合：现代项目主流写法</text>
+
+    <!-- Arrows -->
+    <line x1="260" y1="120" x2="290" y2="120" class="edge" marker-end="url(#arrow)" />
+    <line x1="510" y1="120" x2="540" y2="120" class="edge" marker-end="url(#arrow)" />
+
+    <!-- Recommendation -->
+    <rect x="200" y="220" width="400" height="70" rx="10" class="node storage" />
+    <text x="400" y="246" text-anchor="middle" class="label">日常工作推荐：async/await + try/catch</text>
+    <text x="400" y="268" text-anchor="middle" class="small">读取文件、请求 API、数据库操作等 I/O 任务都用它</text>
+    <text x="400" y="286" text-anchor="middle" class="small">需要并行时用 Promise.all() / Promise.allSettled()</text>
+
+    <line x1="650" y1="170" x2="650" y2="200" class="edge" />
+    <line x1="650" y1="200" x2="540" y2="220" class="edge" marker-end="url(#arrow)" />
+
+    <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="var(--line)" />
+      </marker>
+    </defs>
+  </svg>
