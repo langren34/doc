@@ -125,9 +125,6 @@ MCP 架构分为两层 [官方：mcpcn.com/architecture]：
 1. **协议层（Protocol）**：处理消息帧、请求/响应链接、高级通信模式。核心类包括 `Protocol`、`Client`、`Server`。
 2. **传输层（Transport）**：处理客户端与服务器之间的实际通信。MCP 支持多种传输机制，所有传输都使用 **JSON-RPC 2.0** 交换消息 [官方：mcpcn.com/architecture]。
 
-![MCP 传输层](https://cdn.jsdelivr.net/gh/langren34/doc@main/mcp-tutorial/images/mcp-transports.png)
-*图 2：协议层与传输层解耦 — 同一套 MCP 协议可以跑在 stdio、SSE、HTTP、WebSocket 等多种传输之上 [官方：mcpcn.com/architecture]*
-
 ---
 
 ## 4. 连接生命周期：初始化、消息交换、终止
@@ -190,7 +187,7 @@ enum ErrorCode {
 MCP 定义了三种核心原语，分别对应 "数据"、"动作"、"模板" [官方：mcpcn.com/concepts]。
 
 ![MCP 三大原语](https://cdn.jsdelivr.net/gh/langren34/doc@main/mcp-tutorial/images/mcp-primitives.png)
-*图 3：Resources、Tools、Prompts 的控制权与用途对比。三者分别由应用程序、模型、用户控制 [官方：mcpcn.com/concepts]*
+*图 2：Resources、Tools、Prompts 的控制权与用途对比。三者分别由应用程序、模型、用户控制 [官方：mcpcn.com/concepts]*
 
 ### 5.1 Resources（资源）
 
@@ -306,7 +303,7 @@ MCP 的架构分为 **协议层** 和 **传输层** [官方：mcpcn.com/architec
 这种解耦意味着你可以先写好一个 MCP Server，然后按部署场景切换传输方式，而业务逻辑几乎不变。
 
 ![MCP 传输层](https://cdn.jsdelivr.net/gh/langren34/doc@main/mcp-tutorial/images/mcp-transports.png)
-*图 2：协议层与传输层解耦 — 同一套 MCP 协议可以跑在 stdio、SSE、HTTP、WebSocket 等多种传输之上 [官方：mcpcn.com/architecture]*
+*图 3：协议层与传输层解耦 — 同一套 MCP 协议可以跑在 stdio、SSE、HTTP、WebSocket 等多种传输之上 [官方：mcpcn.com/architecture]*
 
 ### 6.1 stdio（标准输入输出）
 
