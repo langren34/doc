@@ -125,7 +125,7 @@ MCP 架构分为两层 [官方：mcpcn.com/architecture]：
 1. **协议层（Protocol）**：处理消息帧、请求/响应链接、高级通信模式。核心类包括 `Protocol`、`Client`、`Server`。
 2. **传输层（Transport）**：处理客户端与服务器之间的实际通信。MCP 支持多种传输机制，所有传输都使用 **JSON-RPC 2.0** 交换消息 [官方：mcpcn.com/architecture]。
 
-![MCP 分层](https://cdn.jsdelivr.net/gh/langren34/doc@main/mcp-tutorial/images/mcp-architecture.png)
+![MCP 传输层](https://cdn.jsdelivr.net/gh/langren34/doc@main/mcp-tutorial/images/mcp-transports.png)
 *图 2：协议层与传输层解耦 — 同一套 MCP 协议可以跑在 stdio、SSE、HTTP、WebSocket 等多种传输之上 [官方：mcpcn.com/architecture]*
 
 ---
